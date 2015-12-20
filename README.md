@@ -20,6 +20,8 @@ Each site is encompassed in a site module. Presently only the following sights h
 - pip
 
 ### Pip Packages
-0. Virtualenv
+0. virtualenv
 1. sqlalchemy
-2. yaml
+2. pyyaml
+3. pymysql
+4. beautifulsoup4
