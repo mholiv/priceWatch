@@ -1,41 +1,33 @@
-from bs4 import BeautifulSoup
-import urllib.request
-from sql import alcsession, Price
+#!/usr/bin/env python
 
+import os
+# We move to the local directory so we can read the relevent files
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
 
+from sql import alcsession
+import yaml
+from bulkammocom import getBulkAmmoComData
+from dataProcessor import processData
 
-url = 'http://www.bulkammo.com/rifle/bulk-7.62x39mm-ammo'
-#url = 'http://www.bulkammo.com/rifle/bulk-5.45x39mm-ammo'
-#url = 'http://www.bulkammo.com/rifle/bulk-.223-ammo'
-#url = 'http://www.bulkammo.com/handgun/bulk-9mm-ammo'
-#First we grab the messy raw html
-messyHtml = urllib.request.urlopen(url)
-soup = BeautifulSoup(messyHtml, 'html.parser')
+"""
+This is the main file that should be called by cron.
+"""
 
-#Next we isolate the product grid, then the first (cheapest) ammo.
-allItemList = soup.find("ul", {"class": "products-grid"})
-cheapestRound = allItemList.find("li", {"class": "first"})
+#Import out settings
+with open('settings.yaml', 'r') as f:
+    doc = yaml.load(f)
+    sites = doc['sites']
+    urls = doc['urls']
 
-#We get the name of the ammo. It is stored in a href in a h2 header.
-nameOfAmmo = cheapestRound.h2.a.string
+# We loop over all sites in the site list
+for site in sites:
 
-#Next we get the quantity.
-quantityOfAmmo= cheapestRound.find("span", {"class": "stock-qty"}).string.strip()
+    #We loop over urls under site.
+    for url in urls[site]:
 
-
-#We need to worry about 'special' prices. Check and see if it exists
-specialPrice = cheapestRound.find("p", {"class": "special-price"})
-
-#We get the count of rounds. THis assumes the count is always the first word.
-roundCount = int(nameOfAmmo.split(' ')[0])
-
-#If it does not exist use the use the normal price, else use special price
-if specialPrice == None:
-    costOfAmmo = float(cheapestRound.find("span", {"class": "price"}).string.strip()[1:])
-else:
-    costOfAmmo = float(specialPrice.find("span", {"class": "price"}).string.strip()[1:])
-costPerRound= format(costOfAmmo/roundCount, '.3f')
-
-
-
-print('\n',nameOfAmmo,'\n',costOfAmmo,'\n',quantityOfAmmo,'\n',roundCount,'\n',costPerRound)
+        #We get the data and log it for bulkammo
+        if site == 'bulkammo.com':
+            data = getBulkAmmoComData(site,url)
+            processData(data)

@@ -1,0 +1,15 @@
+---
+
+sqlConfiguration:         #Database settings
+  username: ammo          #Database username
+  password: ammoammo      #Database password
+  dbLocation: 127.0.0.1   #Database location
+  dbName: ammo            #Database name
+
+sites:                    # Sites to check
+  - bulkammo.com
+
+urls:                     #Urls to Check
+  bulkammo.com:           #Sites must be included in `sites' list
+    - /rifle/bulk-7.62x39mm-ammo #Reasource locater in domain
+    - /rifle/bulk-5.45x39mm-ammo #Reasource locater in domain
